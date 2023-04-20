@@ -19,14 +19,17 @@ contract CustomERC721 is ERC721URIStorage {
 
     constructor() ERC721("CustomERC721", "C721") {}
 
-    function createNFT(uint256 id, string memory name, string memory description, address owner) public {
+    function createNFT(uint256 id, string memory name, string memory description) public {
+        address owner = msg.sender;
+        require(owner != address(0), "Incorrect Address Info");
         require(!_exists(id), "ID already exists.");
         _tokenIdCounter.increment();
         _safeMint(owner, id);
         _setTokenURI(id, string(abi.encodePacked("data:application/json;base64,", name, ",", description)));
     }
 
-    function transferNFT(address from, address to, uint256 tokenId) public {
+    function transferNFT(address to, uint256 tokenId) public {
+        address from = msg.sender;
         require(ownerOf(tokenId) == from, "Not the owner of the NFT.");
         require(to != address(0), "Cannot transfer to zero address.");
         _transfer(from, to, tokenId);
@@ -47,7 +50,7 @@ contract CustomERC721 is ERC721URIStorage {
         emit NFTUnlisted(tokenId);
     }
 
-    function listOnSaleNFTs() public view returns (uint256[] memory) {
+    function showOnSaleNFTs() public view returns (uint256[] memory) {
         uint256 onSaleCounter = 0;
         for (uint256 i = 0; i < _tokenIdCounter.current(); i++) {
             if (_tokenOnSale[i]) {
@@ -66,17 +69,18 @@ contract CustomERC721 is ERC721URIStorage {
         return onSaleNFTs;
     }
 
-    function purchaseNFT(address from, address to, uint256 tokenId) public payable {
+    function purchaseNFT(uint256 tokenId) public payable {
         require(_tokenOnSale[tokenId], "NFT is not on sale.");
-        require(msg.value >= _tokenPrice[tokenId], "ETH is not enough.");
-        require(ownerOf(tokenId) == from, "Not the owner of the NFT.");
-        require(to != address(0), "Cannot transfer to zero address.");
-        _transfer(from, to, tokenId);
+        address seller = ownerOf(tokenId);
+        address buyer = msg.sender;
+        require(buyer.balance >= _tokenPrice[tokenId], "Buyer's ETH is not enough.");
+        require(buyer != address(0), "Cannot transfer to zero address.");
+        _transfer(seller, buyer, tokenId);
 
         if (msg.value > _tokenPrice[tokenId]) {
-            payable(to).transfer(msg.value.sub(_tokenPrice[tokenId]));
+            payable(buyer).transfer(msg.value.sub(_tokenPrice[tokenId]));
         }
-        payable(from).transfer(_tokenPrice[tokenId]);
+        payable(seller).transfer(_tokenPrice[tokenId]);
 
         _tokenOnSale[tokenId] = false;
         _tokenPrice[tokenId] = 0;
