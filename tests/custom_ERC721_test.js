@@ -112,7 +112,7 @@ contract("CustomERC721", (accounts) => {
 
         // Get input from user for purchase price
         const purchasePrice = await new Promise((resolve) => {
-            readline.question(`Enter purchase price in Ether (correct: >= 1 ETH; incorrect: otherwise): `, (price) => {
+            readline.question(`Enter purchase price in Ether (given an NFT listed for sale = 1ETH; correct: >= 1 ETH; incorrect: otherwise): `, (price) => {
               resolve(web3.utils.toWei(price, "ether"));
               readline.close();
             });
