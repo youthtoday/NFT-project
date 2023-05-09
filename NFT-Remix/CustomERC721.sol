@@ -32,6 +32,7 @@ contract CustomERC721 is ERC721URIStorage {
         address from = msg.sender;
         require(ownerOf(tokenId) == from, "Not the owner of the NFT.");
         require(to != address(0), "Cannot transfer to zero address.");
+        require(from != to, "Cannot transfer to the same address");
         _transfer(from, to, tokenId);
     }
 
